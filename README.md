@@ -17,7 +17,8 @@ Encore is a small local Mac app: a zero-dependency Node server plus a dark web U
 
 ## Requirements
 
-- macOS, Node.js 18+ (`brew install node`), Google Chrome
+- Node.js 18+ and Chrome or Edge
+- macOS for the one-command install and `.app` launcher (other platforms: see [Windows / Linux](#windows--linux))
 - A Google Cloud OAuth client of your own (free, ~5 minutes)
 
 ## Install
@@ -31,6 +32,16 @@ cd encore
 This copies the server and UI to `~/Library/Application Support/Encore` and creates `~/Applications/Encore.app`. Open Encore; the first screen walks you through setup.
 
 For a dedicated window with its own Dock icon, install it as an app from Chrome (⋮ → **Install Encore**). The launcher then opens that window every time.
+
+## Windows / Linux
+
+Only the installer and launcher are Mac-specific (`install.sh`, `app/`). The server and UI run anywhere Node 18+ does:
+
+```bash
+node server.js
+```
+
+Then open http://127.0.0.1:8812 in Chrome or Edge and install it as an app (⋮ → **Install Encore**) for its own window. Your client secret and tokens are saved next to `server.js`. To start it automatically, use your OS's startup mechanism (Task Scheduler, a systemd user service, etc.).
 
 ## Google setup (one time)
 
@@ -55,3 +66,7 @@ node server.js   # serves http://127.0.0.1:8812
 ```
 
 Re-run `./install.sh` after changes; it restarts a running server on the new code.
+
+## License
+
+[MIT](LICENSE)

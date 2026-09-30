@@ -2,6 +2,7 @@
   "name": "encore",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Sort a YouTube playlist by views/likes/etc. and save it as a new playlist.",
   "scripts": {
