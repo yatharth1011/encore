@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Concert ticket stub (an encore), bars rising left to right. -->
+  <g transform="rotate(-12 512 512)">
+    <path d="M190 300 h644 a30 30 0 0 1 30 30 v90 a92 92 0 0 0 0 184 v90 a30 30 0 0 1 -30 30 h-644 a30 30 0 0 1 -30 -30 v-90 a92 92 0 0 0 0 -184 v-90 a30 30 0 0 1 30 -30 z" fill="#ffb224"/>
+    <line x1="700" y1="330" x2="700" y2="694" stroke="#17120a" stroke-width="10" stroke-dasharray="22 20"/>
+    <g fill="#17120a">
+      <rect x="300" y="560" width="72" height="84" rx="14"/>
+      <rect x="400" y="480" width="72" height="164" rx="14"/>
+      <rect x="500" y="380" width="72" height="264" rx="14"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,11 @@
+{
+  "name": "encore",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sort a YouTube playlist by views/likes/etc. and save it as a new playlist.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": { "node": ">=18" }
+}

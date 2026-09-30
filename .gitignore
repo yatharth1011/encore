@@ -1,0 +1,9 @@
+# Secrets and per-machine state — Encore keeps these next to server.js at runtime.
+client_secret*.json
+tokens*.json
+quota*.json
+server.log
+server.pid
+node_modules/
+.claude/
+.DS_Store

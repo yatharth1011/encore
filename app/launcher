@@ -1,0 +1,38 @@
+#!/bin/bash
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+SUPPORT_DIR="$HOME/Library/Application Support/Encore"
+SERVER="$SUPPORT_DIR/server.js"
+PORT=8812
+PIDFILE="$SUPPORT_DIR/server.pid"
+LOG="$SUPPORT_DIR/server.log"
+CHROME_APPS="$HOME/Applications/Chrome Apps.localized"
+SHELL_APP="$CHROME_APPS/Encore Shell.app"
+
+is_up() {
+  curl -s -o /dev/null -m 1 "http://127.0.0.1:$PORT/api/status"
+}
+
+if ! is_up; then
+  NODE="$(command -v node)"
+  nohup "$NODE" "$SERVER" >> "$LOG" 2>&1 &
+  echo $! > "$PIDFILE"
+  for i in $(seq 1 40); do
+    is_up && break
+    sleep 0.2
+  done
+fi
+
+# Chrome occasionally regenerates the installed PWA shortcut under its
+# original name (e.g. when the page's manifest/icons change), which replaces
+# our renamed copy. Self-heal by re-adopting it under the same name instead
+# of silently falling back to a plain browser tab.
+if [ ! -d "$SHELL_APP" ] && [ -d "$CHROME_APPS/Encore.app" ]; then
+  mv "$CHROME_APPS/Encore.app" "$SHELL_APP"
+fi
+
+if [ -d "$SHELL_APP" ]; then
+  open -a "$SHELL_APP"
+else
+  open "http://127.0.0.1:$PORT/"
+fi

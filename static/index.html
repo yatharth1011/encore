@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Encore</title>
+<meta name="theme-color" content="#0d0c0a" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,500&family=Schibsted+Grotesk:wght@400;500;600;700&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="150 280 740 464" width="36" height="23" aria-hidden="true">
+      <g transform="rotate(-12 512 512)">
+        <path d="M190 300 h644 a30 30 0 0 1 30 30 v90 a92 92 0 0 0 0 184 v90 a30 30 0 0 1 -30 30 h-644 a30 30 0 0 1 -30 -30 v-90 a92 92 0 0 0 0 -184 v-90 a30 30 0 0 1 30 -30 z" fill="currentColor"/>
+        <line x1="700" y1="330" x2="700" y2="694" stroke="var(--bg)" stroke-width="14" stroke-dasharray="26 22"/>
+        <g fill="var(--bg)"><rect x="300" y="560" width="72" height="84" rx="14"/><rect x="400" y="480" width="72" height="164" rx="14"/><rect x="500" y="380" width="72" height="264" rx="14"/></g>
+      </g>
+    </svg>
+    <span class="brand-name">Encore</span>
+  </div>
+  <div id="account" class="account hidden">
+    <img id="accountThumb" class="account-thumb" alt="" referrerpolicy="no-referrer" />
+    <span id="accountName" class="account-name"></span>
+    <a id="backupLink" class="btn btn-primary btn-sm hidden" href="/auth?slot=2" title="Sign in once with the second Google client so Encore can switch to it when the first one's quota runs out">Connect backup client</a>
+    <button id="logoutBtn" class="btn btn-ghost btn-sm">Sign out</button>
+  </div>
+</header>
+
+<main>
+  <!-- One-time setup: Google OAuth client -->
+  <section id="viewSetup" class="view hidden">
+    <div class="panel narrow">
+      <p class="eyebrow">One-time setup</p>
+      <h1>Connect Encore to Google</h1>
+      <p class="lede">Encore talks to YouTube with your own Google Cloud OAuth client, so nothing passes through anyone else's server. This takes about five minutes, once.</p>
+      <ol class="steps">
+        <li>Open <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Google Cloud Console</a> and create a project (any name).</li>
+        <li>Enable the <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" rel="noopener">YouTube Data API v3</a> for it.</li>
+        <li>Under <a href="https://console.cloud.google.com/auth/overview" target="_blank" rel="noopener">Google Auth Platform</a>, configure the consent screen: <em>External</em>, your email as support contact. Then on <b>Audience</b> click <b>Publish app</b> — in “Testing” mode Google signs you out every 7 days.</li>
+        <li>Under <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener">Clients</a>, create an OAuth client of type <b>Desktop app</b> and download its JSON.</li>
+      </ol>
+      <label class="field">
+        <span>Paste the downloaded JSON, or pick the file</span>
+        <textarea id="secretText" rows="5" spellcheck="false" placeholder='{"installed":{"client_id":"…","client_secret":"…"}}'></textarea>
+      </label>
+      <div class="row">
+        <label class="btn btn-ghost">
+          <input id="secretFile" type="file" accept=".json,application/json" hidden />
+          Choose file…
+        </label>
+        <button id="saveSecretBtn" class="btn btn-primary">Save &amp; continue</button>
+      </div>
+      <p class="fine">If you chose a <em>Web application</em> client instead, add this authorized redirect URI: <code id="redirectUri"></code></p>
+      <p id="setupError" class="error hidden"></p>
+    </div>
+  </section>
+
+  <!-- Sign in once -->
+  <section id="viewSignin" class="view hidden">
+    <div class="panel narrow center">
+      <p class="eyebrow">Almost there</p>
+      <h1>Sign in with YouTube</h1>
+      <p class="lede">You do this once. Encore keeps a refresh token on this Mac and renews access by itself from then on.</p>
+      <a class="btn btn-primary btn-lg" href="/auth">Connect YouTube account</a>
+      <p id="signinError" class="error hidden"></p>
+      <button id="resetClientBtn" class="btn btn-link">Use a different Google client</button>
+    </div>
+  </section>
+
+  <!-- Main app -->
+  <section id="viewMain" class="view hidden">
+    <div class="source">
+      <label class="field grow">
+        <span>Your playlists</span>
+        <select id="playlistSelect"><option value="">Loading…</option></select>
+      </label>
+      <label class="field grow">
+        <span>…or any playlist link</span>
+        <input id="playlistUrl" type="text" placeholder="https://www.youtube.com/playlist?list=…" />
+      </label>
+      <button id="loadBtn" class="btn btn-primary">Load</button>
+    </div>
+
+    <div id="empty" class="empty">
+      <p>Pick a playlist to see every video with its views, likes and comments.</p>
+    </div>
+
+    <div id="loaded" class="hidden">
+      <div class="summary">
+        <h2 id="plTitle"></h2>
+        <div class="stats" id="stats"></div>
+      </div>
+
+      <div class="controls">
+        <div class="chips" id="sortChips" role="radiogroup" aria-label="Sort by"></div>
+        <div class="controls-right">
+          <button id="dirBtn" class="btn btn-ghost btn-sm" title="Flip order"></button>
+          <label class="inline">
+            Keep top
+            <input id="topN" type="number" min="1" placeholder="all" />
+          </label>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="grid">
+          <thead>
+            <tr>
+              <th class="c-rank">#</th>
+              <th class="c-video">Video</th>
+              <th class="c-num" data-sort="views">Views</th>
+              <th class="c-num" data-sort="likes">Likes</th>
+              <th class="c-num" data-sort="comments">Comments</th>
+              <th class="c-num" data-sort="ratio">Like rate</th>
+              <th class="c-num" data-sort="duration">Length</th>
+              <th class="c-num" data-sort="published">Uploaded</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="dock" class="dock hidden">
+  <div class="dock-inner">
+    <div class="dock-fields">
+      <label class="field grow">
+        <span>New playlist name</span>
+        <input id="newTitle" type="text" maxlength="150" />
+      </label>
+      <label class="field">
+        <span>Visibility</span>
+        <select id="privacy">
+          <option value="private">Private</option>
+          <option value="unlisted">Unlisted</option>
+          <option value="public">Public</option>
+        </select>
+      </label>
+      <button id="createBtn" class="btn btn-primary btn-lg">Create playlist</button>
+    </div>
+    <p id="quotaNote" class="fine"></p>
+    <div id="progress" class="progress hidden">
+      <div class="bar"><div id="barFill" class="bar-fill"></div></div>
+      <p id="progressText" class="progress-text"></p>
+    </div>
+  </div>
+</footer>
+
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
